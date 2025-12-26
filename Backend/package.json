@@ -1,0 +1,13 @@
+{
+  "name": "backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node src/generate.js",
+    "generate": "node src/generate.js"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^9.0.0"
+  }
+}
