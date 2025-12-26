@@ -8,11 +8,11 @@ import Link from "next/link"
 export default function OurMCPPage() {
   useEffect(() => {
     // Page entrance animations
-    gsap.from(".page-title", { y: 24, opacity: 0, duration: 0.8, ease: "power2.out", delay: 0.1 })
-    gsap.from(".page-subtitle", { y: 16, opacity: 0, duration: 0.7, ease: "power2.out", delay: 0.2 })
+    gsap.from(".page-title", { y: 24, opacity: 1, duration: 0.8, ease: "power2.out", delay: 0.1 })
+    gsap.from(".page-subtitle", { y: 16, opacity: 1, duration: 0.7, ease: "power2.out", delay: 0.2 })
 
     // Section fade-ins
-    gsap.set(".section", { opacity: 0, y: 16 })
+    gsap.set(".section", { opacity: 1, y: 16 })
     const reveal = () => {
       gsap.utils.toArray<HTMLElement>(".section").forEach((el, i) => {
         const rect = el.getBoundingClientRect()

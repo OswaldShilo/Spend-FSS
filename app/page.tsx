@@ -15,34 +15,34 @@ export default function HomePage() {
 
     tl.fromTo(
       ".intro-mark",
-      { opacity: 0, scale: 0.85, rotate: -6 },
+      { opacity: 1, scale: 0.85, rotate: -6 },
       { opacity: 1, scale: 1, rotate: 0, duration: 0.8, ease: "power2.out" },
     )
       .to({}, { duration: 1.2 })
       .to(".intro", {
-        opacity: 0,
+        opacity: 1,
         duration: 0.6,
         ease: "power2.inOut",
         onComplete: () => setShowIntro(false),
       })
 
     // Subtle hero entrance animations
-    gsap.from(".hero-headline", { y: 24, opacity: 0, duration: 0.8, ease: "power2.out", delay: 0.1 })
-    gsap.from(".hero-sub", { y: 16, opacity: 0, duration: 0.8, ease: "power2.out", delay: 0.2 })
+    gsap.from(".hero-headline", { y: 24, opacity: 1, duration: 0.8, ease: "power2.out", delay: 0.1 })
+    gsap.from(".hero-sub", { y: 16, opacity: 1, duration: 0.8, ease: "power2.out", delay: 0.2 })
 
     gsap.from(".hero-card, .hero-chip", {
       y: 20,
-      opacity: 0,
+      opacity: 1,
       rotate: (i: number) => (i % 2 === 0 ? -4 : 4),
       duration: 0.8,
       delay: 0.25,
       stagger: 0.08,
       ease: "power2.out",
     })
-    gsap.from(".hero-dock", { y: 16, opacity: 0, duration: 0.6, delay: 0.35, ease: "power2.out" })
+    gsap.from(".hero-dock", { y: 16, opacity: 1, duration: 0.6, delay: 0.35, ease: "power2.out" })
 
     // Section fade-ins
-    gsap.set(".section", { opacity: 0, y: 16 })
+    gsap.set(".section", { opacity: 1, y: 16 })
     const reveal = () => {
       gsap.utils.toArray<HTMLElement>(".section").forEach((el, i) => {
         const rect = el.getBoundingClientRect()
@@ -111,6 +111,7 @@ export default function HomePage() {
           <h1
             id="hero-title"
             className="hero-headline text-balance text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-black max-w-4xl mx-auto"
+            style={{ color: '#000000', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
           >
             The AI-Powered secure Expense tracker with MCP
           </h1>

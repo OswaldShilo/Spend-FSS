@@ -1,6 +1,8 @@
 "use client"
-import { Navbar } from "@/components/navbar"
 import Link from "next/link"
+import { useAuth } from "@/context/AuthContext"
+import { useRouter } from "next/navigation"
+import { LogOut, User, Mail, Calendar } from "lucide-react"
 import {
   PieChart,
   Pie,
@@ -77,13 +79,62 @@ const recentTransactions = [
 ]
 
 export default function DashboardPage() {
-  const totalBalance = bankAccounts.reduce((sum, acc) => sum + acc.balance, 0)
+  const { user, userProfile, loading } = useAuth();
+  const router = useRouter();
+  const totalBalance = bankAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+
+  const handleSignOut = async () => {
+    const { auth } = await import("@/lib/firebase");
+    await auth.signOut();
+    router.push("/");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    router.push("/auth/signin");
+    return null;
+  }
 
   return (
     <main className="min-h-dvh bg-white overflow-x-hidden">
-      <Navbar />
+      {/* User Profile Header */}
+      <div className="bg-gradient-to-r from-primary to-[#8EA08A] text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-2xl font-bold">
+                {userProfile?.displayName?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">{userProfile?.displayName || "User"}</h2>
+                <div className="flex items-center gap-2 text-white/80 text-sm mt-1">
+                  <Mail className="w-4 h-4" />
+                  <span>{user.email}</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-spend-text-gray-900 mb-2">Financial Dashboard</h1>

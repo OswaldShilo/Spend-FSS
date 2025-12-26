@@ -16,7 +16,7 @@ export function Navbar() {
 
   useEffect(() => {
     // Entrance
-    gsap.fromTo(".navbar", { y: -20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" })
+    gsap.fromTo(".navbar", { y: -20, opacity: 1 }, { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" })
 
     const handleScroll = () => setScrolled(window.scrollY > 50)
     window.addEventListener("scroll", handleScroll)

@@ -8,7 +8,7 @@ import Link from "next/link"
 export default function AboutPage() {
   useEffect(() => {
     // Section fade-ins
-    gsap.set(".section", { opacity: 0, y: 16 })
+    gsap.set(".section", { opacity: 1, y: 16 })
     const reveal = () => {
       gsap.utils.toArray<HTMLElement>(".section").forEach((el, i) => {
         const rect = el.getBoundingClientRect()

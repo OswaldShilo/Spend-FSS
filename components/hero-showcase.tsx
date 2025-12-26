@@ -15,20 +15,20 @@ export default function HeroShowcase() {
     const ctx = gsap.context(() => {
       gsap.from(".hero-headline", {
         y: 24,
-        opacity: 0,
+        opacity: 1,
         duration: 0.8,
         ease: "power2.out",
       })
       gsap.from(".hero-sub", {
         y: 16,
-        opacity: 0,
+        opacity: 1,
         duration: 0.7,
         delay: 0.1,
         ease: "power2.out",
       })
       gsap.from(".hero-card, .hero-chip", {
         y: 20,
-        opacity: 0,
+        opacity: 1,
         rotate: (i) => (i % 2 === 0 ? -4 : 4),
         duration: 0.8,
         delay: 0.15,
@@ -37,7 +37,7 @@ export default function HeroShowcase() {
       })
       gsap.from(".hero-dock", {
         y: 16,
-        opacity: 0,
+        opacity: 1,
         duration: 0.6,
         delay: 0.25,
         ease: "power2.out",
