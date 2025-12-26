@@ -1,11 +1,18 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+# Ignore node_modules anywhere in the repo
+node_modules/
+Frontend/node_modules/
+Backend/node_modules/
 
-# next.js
-/.next/
-/out/
+# next.js build outputs
+.next/
+Frontend/.next/
+Backend/.next/
+out/
+Frontend/out/
+Backend/out/
 
 # production
 /build
@@ -18,6 +25,8 @@ yarn-error.log*
 
 # env files
 .env*
+Frontend/.env.local
+Backend/.env.local
 
 # vercel
 .vercel

@@ -1,8 +1,9 @@
 "use client"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { useRouter } from "next/navigation"
-import { LogOut, User, Mail, Calendar } from "lucide-react"
+import { LogOut, Mail } from "lucide-react"
 import {
   PieChart,
   Pie,
@@ -19,69 +20,76 @@ import {
   Legend,
 } from "recharts"
 
-// Mock data for bank accounts
-const bankAccounts = [
-  {
-    id: "1",
-    name: "Main Checking",
-    bank: "Chase Bank",
-    balance: 12450.75,
-    accountNumber: "****4521",
-    type: "Checking",
-  },
-  {
-    id: "2",
-    name: "Savings Account",
-    bank: "Bank of America",
-    balance: 25800.0,
-    accountNumber: "****7832",
-    type: "Savings",
-  },
-  {
-    id: "3",
-    name: "Credit Card",
-    bank: "Citi Bank",
-    balance: -1850.5,
-    accountNumber: "****9102",
-    type: "Credit",
-  },
-]
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
 
-// Mock data for monthly spending
-const monthlySpending = [
-  { month: "Jan", amount: 3200 },
-  { month: "Feb", amount: 2800 },
-  { month: "Mar", amount: 3500 },
-  { month: "Apr", amount: 2950 },
-  { month: "May", amount: 4100 },
-  { month: "Jun", amount: 3800 },
-]
+type Account = {
+  id: string;
+  name: string;
+  bank: string;
+  balance: number;
+  accountNumber: string;
+  type: string;
+};
 
-// Mock data for category breakdown
-const categoryData = [
-  { name: "Food & Dining", value: 1250, color: "#5B7553" },
-  { name: "Transportation", value: 650, color: "#8EA08A" },
-  { name: "Shopping", value: 890, color: "#A8C5A0" },
-  { name: "Entertainment", value: 420, color: "#C4D9BE" },
-  { name: "Bills & Utilities", value: 1100, color: "#D9E8D5" },
-  { name: "Others", value: 490, color: "#E8F3E5" },
-]
+type Transaction = {
+  id: string;
+  name: string;
+  amount: number;
+  date: string;
+  category: string;
+};
 
-// Mock recent transactions
-const recentTransactions = [
-  { id: "1", name: "Grocery Store", amount: -85.32, date: "2025-01-19", category: "Food & Dining" },
-  { id: "2", name: "Salary Deposit", amount: 4500.0, date: "2025-01-18", category: "Income" },
-  { id: "3", name: "Netflix Subscription", amount: -15.99, date: "2025-01-17", category: "Entertainment" },
-  { id: "4", name: "Gas Station", amount: -52.0, date: "2025-01-16", category: "Transportation" },
-  { id: "5", name: "Amazon Purchase", amount: -129.99, date: "2025-01-15", category: "Shopping" },
-  { id: "6", name: "Electric Bill", amount: -95.5, date: "2025-01-14", category: "Bills & Utilities" },
-  { id: "7", name: "Restaurant", amount: -68.75, date: "2025-01-13", category: "Food & Dining" },
-]
+type MonthlySpending = {
+  month: string;
+  amount: number;
+};
+
+type CategoryDatum = {
+  name: string;
+  value: number;
+  color: string;
+};
+
+type DashboardData = {
+  totalBalance: number;
+  accounts: Account[];
+  categoryData: CategoryDatum[];
+  monthlySpending: MonthlySpending[];
+  recentTransactions: Transaction[];
+  transactions: Transaction[];
+};
 
 export default function DashboardPage() {
   const { user, userProfile, loading } = useAuth();
   const router = useRouter();
-  const totalBalance = bankAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [dataError, setDataError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setDataLoading(true);
+        setDataError(null);
+        const res = await fetch(`${API_BASE}/api/dashboard`);
+        if (!res.ok) throw new Error(`Request failed with ${res.status}`);
+        const json = (await res.json()) as DashboardData;
+        setData(json);
+      } catch (err: any) {
+        setDataError(err.message || "Failed to load data");
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const totalBalance = data?.totalBalance ?? 0;
+  const accounts = data?.accounts ?? [];
+  const monthlySpending = data?.monthlySpending ?? [];
+  const categoryData = data?.categoryData ?? [];
+  const recentTransactions = data?.recentTransactions ?? [];
 
   const handleSignOut = async () => {
     const { auth } = await import("@/lib/firebase");
@@ -103,6 +111,34 @@ export default function DashboardPage() {
   if (!user) {
     router.push("/auth/signin");
     return null;
+  }
+
+  if (dataLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (dataError || !data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md px-6">
+          <p className="text-lg font-semibold text-red-600 mb-2">Failed to load dashboard data</p>
+          <p className="text-gray-600 mb-4">{dataError || "Unknown error"}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -191,7 +227,7 @@ export default function DashboardPage() {
         <div className="mb-8">
           <h3 className="text-xl font-semibold text-spend-text-gray-900 mb-4">Bank Accounts</h3>
           <div className="grid gap-4 md:grid-cols-3">
-            {bankAccounts.map((account) => (
+            {accounts.map((account) => (
               <div
                 key={account.id}
                 className="bg-white border border-primary/20 rounded-2xl p-6 hover:shadow-lg transition-shadow"

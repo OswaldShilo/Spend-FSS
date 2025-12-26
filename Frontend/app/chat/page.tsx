@@ -1,8 +1,9 @@
 "use client"
 
 import type React from "react"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
-import { Navbar } from "@/components/navbar"
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 
@@ -11,6 +12,15 @@ interface Message {
   role: "user" | "assistant"
   content: string
   timestamp: Date
+}
+
+type DashboardPayload = {
+  totalBalance: number
+  accounts: any[]
+  categoryData: any[]
+  monthlySpending: any[]
+  recentTransactions: any[]
+  transactions: any[]
 }
 
 const suggestedQuestions = [
@@ -22,10 +32,15 @@ const suggestedQuestions = [
   "Help me create a budget for next month",
 ]
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000"
+
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [detail, setDetail] = useState<"concise" | "detailed">("concise")
+  const [dashboardData, setDashboardData] = useState<DashboardPayload | null>(null)
+  const [dataError, setDataError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -35,6 +50,20 @@ export default function ChatPage() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/dashboard`)
+        if (!res.ok) throw new Error(`Dashboard request failed ${res.status}`)
+        const json = (await res.json()) as DashboardPayload
+        setDashboardData(json)
+      } catch (err: any) {
+        setDataError(err.message || "Failed to load dashboard data")
+      }
+    }
+    fetchDashboard()
+  }, [])
 
   const handleSend = async (content: string) => {
     if (!content.trim()) return
@@ -50,17 +79,48 @@ export default function ChatPage() {
     setInput("")
     setIsLoading(true)
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      // Ensure dashboard data is loaded
+      if (!dashboardData) {
+        throw new Error("Dashboard data not yet available")
+      }
+
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: content,
+          dashboard: dashboardData,
+          detail,
+        }),
+      })
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}))
+        throw new Error(errJson?.error || `Chat API failed with ${response.status}`)
+      }
+
+      const data = await response.json()
+      const reply = data?.reply || "I could not generate a response."
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: `I understand you're asking about "${content}". As your Finance MCP assistant, I can help you analyze your spending patterns, create budgets, and provide personalized financial insights. Let me look into that for you...`,
+        content: reply,
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, assistantMessage])
+    } catch (err: any) {
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: `Sorry, I couldn't complete your request. ${err.message || "Unknown error"}`,
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, assistantMessage])
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -74,9 +134,7 @@ export default function ChatPage() {
 
   return (
     <main className="min-h-dvh bg-white flex flex-col">
-      <Navbar />
-
-      <div className="flex-1 flex flex-col max-w-4xl w-full mx-auto pt-24 pb-4 px-4">
+      <div className="flex-1 flex flex-col max-w-4xl w-full mx-auto pt-16 pb-4 px-4">
         {/* Header */}
         <div className="mb-6">
           <Link
@@ -153,7 +211,13 @@ export default function ChatPage() {
                         : "bg-spend-bg-gray-50 text-spend-text-gray-900 border border-spend-text-gray-200"
                     }`}
                   >
-                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    {message.role === "assistant" ? (
+                      <div className="prose prose-sm max-w-none">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p className="text-sm leading-relaxed">{message.content}</p>
+                    )}
                     <p
                       className={`text-xs mt-2 ${message.role === "user" ? "text-white/70" : "text-spend-text-gray-500"}`}
                     >
@@ -180,7 +244,7 @@ export default function ChatPage() {
 
         {/* Input Form */}
         <form onSubmit={handleSubmit} className="sticky bottom-0 bg-white pt-4 border-t border-spend-text-gray-200">
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <input
               type="text"
               value={input}
@@ -189,6 +253,16 @@ export default function ChatPage() {
               className="flex-1 px-4 py-3 rounded-xl border border-spend-text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-spend-text-gray-900 placeholder:text-spend-text-gray-400"
               disabled={isLoading}
             />
+            <select
+              value={detail}
+              onChange={(e) => setDetail(e.target.value as "concise" | "detailed")}
+              className="px-3 py-3 rounded-xl border border-spend-text-gray-200 text-sm text-spend-text-gray-700 bg-white"
+              disabled={isLoading}
+              aria-label="Detail level"
+            >
+              <option value="concise">Concise</option>
+              <option value="detailed">Detailed</option>
+            </select>
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
